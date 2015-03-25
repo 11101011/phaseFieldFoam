@@ -1,7 +1,7 @@
 Application
 -----------
 
-   preCPhaseFieldFoam
+   phaseFieldFoam
 
 Description
 -----------   
