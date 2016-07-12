@@ -1,4 +1,4 @@
-
+{
     //-Calculate descretization coefficients based on the definition of Ueqn
     volScalarField rAU("rAU",1.0/UEqn.A());
     surfaceScalarField rAUf("rAUf",fvc::interpolate(rAU));
@@ -24,7 +24,7 @@
         K_SandG*rAUf
     );
 
-    phiHbyA -= phig;
+    phiHbyA += phig;
 
     while (pimple.correctNonOrthogonal())
     {
@@ -61,3 +61,4 @@
         );
         p_rgh = p - rho*gh;
     }
+}

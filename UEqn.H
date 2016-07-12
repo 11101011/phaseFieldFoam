@@ -42,7 +42,7 @@
     (
         "K_SandG",
         (
-            fvc::snGrad(rho)*ghf*mesh.magSf()
-          + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
+            (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
+          - fvc::snGrad(rho)*ghf*mesh.magSf()
         )
     );
