@@ -1,5 +1,5 @@
 {
-    volScalarField tempAlpha1 = alpha1.oldTime() - fvc::div(difFlux) * runTime.deltaT() * T_Multiplier;
+    volScalarField tempAlpha1 = alpha1.oldTime() - fvc::div(difFlux)*runTime.deltaT()*T_Multiplier;
 
     //- Limit at 0
     volScalarField lowFilter
@@ -15,8 +15,8 @@
         neg(tempAlpha1)
     );
 
-    volScalarField newDelta = - fvc::div(fvc::interpolate(lowFilter) * difFlux) * runTime.deltaT() * T_Multiplier;
-    lowFilter *= min(max((alpha1.oldTime() + newDelta) * lowFilter / sign(newDelta) / max(mag(newDelta),scalar(1e-32)),scalar(-4)),scalar(5));
+    volScalarField newDelta = - fvc::div(fvc::interpolate(lowFilter)*difFlux)*runTime.deltaT()*T_Multiplier;
+    lowFilter *= min(max((alpha1.oldTime() + newDelta)*lowFilter/sign(newDelta)/max(mag(newDelta),scalar(1e-32)),scalar(-4)),scalar(5));
 
     //- Limit at 1
     volScalarField highFilter
@@ -32,8 +32,8 @@
         neg(scalar(1) - tempAlpha1)
     );
 
-    newDelta = - fvc::div(fvc::interpolate(highFilter) * difFlux) * runTime.deltaT() * T_Multiplier;
-    highFilter *= min(max((scalar(1) - alpha1.oldTime() - newDelta)*scalar(-1) * highFilter / sign(newDelta) / max(mag(newDelta),scalar(1e-32)),scalar(-4)),scalar(5));
+    newDelta = - fvc::div(fvc::interpolate(highFilter)*difFlux)*runTime.deltaT()*T_Multiplier;
+    highFilter *= min(max((scalar(1) - alpha1.oldTime() - newDelta)*scalar(-1)*highFilter/sign(newDelta)/max(mag(newDelta),scalar(1e-32)),scalar(-4)),scalar(5));
 
     //- Update difFlux
     difFlux *= (scalar(1) - fvc::interpolate(highFilter) - fvc::interpolate(lowFilter));

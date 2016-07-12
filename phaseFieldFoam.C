@@ -98,17 +98,16 @@ int main(int argc, char *argv[])
             // Do any mesh changes
             mesh.update();
         }
-        
-        
+
         //- Update the refinement field indicator
-        gradAlpha1Field =
-        (
-            twoPhaseProperties.capillaryWidth() * mag(fvc::grad(alpha1)) / Foam::pow(scalar(2),scalar(0.5)) / Foam::pow(twoPhaseProperties.filterAlpha() * (scalar(1)
-          - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature()) * scalar(0.5))
-        );
+        gradAlpha1Field = twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))
+                        / Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
+                        - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5));
 
         {
-            volScalarField checkAlpha1 = scalar(10) * (pos(alpha1 - twoPhaseProperties.filterAlpha() / scalar(2)) - neg(scalar(1) - twoPhaseProperties.filterAlpha() / scalar(2) - alpha1));
+            volScalarField checkAlpha1 = scalar(10)*(pos(alpha1 - twoPhaseProperties.filterAlpha()/scalar(2)) - neg(scalar(1) 
+                                       - twoPhaseProperties.filterAlpha()/scalar(2) - alpha1));
+
             gradAlpha1Field += checkAlpha1;
         }
 
@@ -121,8 +120,8 @@ int main(int argc, char *argv[])
                 << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
                 << " s" << endl;
 
-            gh = g & mesh.C();
-            ghf = g & mesh.Cf();
+            gh = g& mesh.C();
+            ghf = g& mesh.Cf();
         }
         //---------------------------------------------------//
 
@@ -140,27 +139,27 @@ int main(int argc, char *argv[])
         twoPhaseProperties.correct();
 
         //- RungeKutta 4th order method
-        volScalarField K_alpha1 ("K_alpha1", alpha1 * scalar(0) / runTime.deltaT());
-        surfaceScalarField rhoPhiSum = scalar(0) * rhoPhi;
- 
+        volScalarField K_alpha1 ("K_alpha1", alpha1*scalar(0)/runTime.deltaT());
+        surfaceScalarField rhoPhiSum = scalar(0)*rhoPhi;
+
         scalar T_Multiplier = scalar(0);
         scalar K_Multiplier = scalar(0);
 
         Info << "Solving U and Alpha1 RK4 Equations: ";
 
-        for (int i = 0; i <= 3; i++)
+        for (int i=0; i<=3; i++)
         {
             Info << " " << scalar(i);
-            T_Multiplier = scalar(0.5) + scalar(i / 2) * scalar(0.5);
-            K_Multiplier = scalar(1) / (scalar(3) + scalar(3) * mag(scalar(1) - scalar((i+1)/scalar(2))));
+            T_Multiplier = scalar(0.5) + scalar(i/2)*scalar(0.5);
+            K_Multiplier = scalar(1)/(scalar(3) + scalar(3)*mag(scalar(1) - scalar((i + 1)/scalar(2))));
 
             #include "alphaEqn.H"
-            K_alpha1 += K_Multiplier * tempK_Alpha1;
+            K_alpha1 += K_Multiplier*tempK_Alpha1;
         }
 
         Info << " ... Complete" << endl;
 
-        alpha1 = alpha1.oldTime() + runTime.deltaT() * K_alpha1;
+        alpha1 = alpha1.oldTime() + runTime.deltaT()*K_alpha1;
         twoPhaseProperties.updateContactAngle(alpha1);
 
         {
@@ -172,7 +171,7 @@ int main(int argc, char *argv[])
                 << "  Max(alpha1) = " << max(alpha1).value()
                 << endl;
         }
-        rho = twoPhaseProperties.rhoMix(scalar(0.5) * (alpha1 + alpha1.oldTime()));
+        rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
         rhoPhi = rhoPhiSum;
 
         //- Pressure-velocity PIMPLE corrector loop

@@ -1,6 +1,4 @@
     Info<< "Reading field fraction of liquid phase\n" << endl;
-
-    //-Define transportProperties Dictionary
     IOdictionary transportProperties
     (
         IOobject
@@ -11,6 +9,20 @@
             IOobject::MUST_READ_IF_MODIFIED,
             IOobject::NO_WRITE
         )
+    );
+
+    Info<< "Reading field p_rgh\n" << endl;
+    volScalarField p_rgh
+    (
+        IOobject
+        (
+            "p_rgh",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
     );
 
     surfaceScalarField difFlux
@@ -40,19 +52,6 @@
         mesh
     );
 
-    Info<< "Reading field p_rgh\n" << endl;
-    volScalarField p_rgh
-    (
-        IOobject
-        (
-            "p_rgh",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
 
     #include "createPhi.H"
     
@@ -83,7 +82,7 @@
     
     #include "readGravitationalAcceleration.H"
 
-    phi = fvc::interpolate(U) & mesh.Sf();
+    phi = fvc::interpolate(U)& mesh.Sf();
 
     //-Need to store rho for ddt(rho, U)
     volScalarField rho
@@ -101,8 +100,8 @@
     rho.oldTime();
 
     Info << "Calculating field g.h\n" << endl;
-    volScalarField gh("gh", g & mesh.C());
-    surfaceScalarField ghf("ghf",g & mesh.Cf());
+    volScalarField gh("gh", g& mesh.C());
+    surfaceScalarField ghf("ghf",g& mesh.Cf());
     
     volScalarField gradAlpha1Field
     (
@@ -114,8 +113,8 @@
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        twoPhaseProperties.capillaryWidth() * mag(gradAlpha1) / Foam::pow(scalar(2),scalar(0.5)) / Foam::pow(twoPhaseProperties.filterAlpha() * (scalar(1)
-        - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature()) * scalar(0.5))
+        twoPhaseProperties.capillaryWidth()*mag(gradAlpha1)/Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
+      - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5))
     );
 
     volScalarField p
@@ -128,7 +127,7 @@
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        p_rgh + rho * gh
+        p_rgh + rho*gh
     );
     
     surfaceScalarField rhoPhi
@@ -141,11 +140,11 @@
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        fvc::interpolate(rho) * phi
+        fvc::interpolate(rho)*phi
     );
 
     label pRefCell = 0;
-    scalar pRefValue = 0;
+    scalar pRefValue = 0.0;
     setRefCell
     (
         p,
@@ -163,7 +162,7 @@
             p.dimensions(),
             pRefValue - getRefCellValue(p, pRefCell)
         );
-        p_rgh = p - rho * gh;
+        p_rgh = p - rho*gh;
     }
 
     fv::IOoptionList fvOptions(mesh);

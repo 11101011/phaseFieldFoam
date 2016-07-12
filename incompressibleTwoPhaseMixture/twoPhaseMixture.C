@@ -52,9 +52,9 @@ scalar twoPhaseMixture::calc2F1(double a1_,double a2_, double b_, double z_)
 {
     scalar result = 1;
     scalar c_ = 1;
-    for (int iCounter = 0; iCounter < 10000; iCounter++)
+    for (int iCounter=0; iCounter<10000; iCounter++)
     {
-        c_ *= (iCounter + a1_) * (iCounter + a2_) / (iCounter + scalar(1)) / (iCounter + b_) * z_;
+        c_ *= (iCounter + a1_)*(iCounter + a2_)/(iCounter + scalar(1))/(iCounter + b_)*z_;
         result += c_;
     }
     return result; 
@@ -73,7 +73,7 @@ void twoPhaseMixture::calcNu()
     );
 
     //-Average kinematic viscosity calculated from dynamic viscosity
-    nu_ = mu(alpha1_) / (limitedAlpha1 * rho1_ + (scalar(1) - limitedAlpha1) * rho2_);
+    nu_ = mu(alpha1_)/(limitedAlpha1*rho1_ + (scalar(1) - limitedAlpha1)*rho2_);
 }
 
 //-Calculate the capillary width which controls interfacial thickness
@@ -82,9 +82,9 @@ void twoPhaseMixture::calcCapillaryWidth()
     //-This formulation applies to the TVSED energy function
     //-Variable units: [capillaryWidth] = (0 1 0 0 0 0 0)
     
-    capillaryWidth_ = thickness_ / Foam::pow(scalar(2),Tr_.value() + scalar(0.5))
-                    / (scalar(1) - scalar(2) * filterAlpha_) / calc2F1(scalar(0.5),(scalar(1) + Tr_.value()) /
-                    scalar(2),scalar(1.5),sqr(scalar(1) - scalar(2) * filterAlpha_.value()));
+    capillaryWidth_ = thickness_/Foam::pow(scalar(2),Tr_.value() + scalar(0.5))
+                    / (scalar(1) - scalar(2)*filterAlpha_)/calc2F1(scalar(0.5),(scalar(1) + Tr_.value())/
+                      scalar(2),scalar(1.5),sqr(scalar(1) - scalar(2)*filterAlpha_.value()));
 
     Info << "Capillary Width = " << capillaryWidth_.value() << endl;
 }
@@ -92,14 +92,13 @@ void twoPhaseMixture::calcCapillaryWidth()
 //-Calculates the mixing energy density, which controls the surface tension
 void twoPhaseMixture::calcMixingEDensity()
 {
-    
     //-The following entry is for the standard surface tension expression
     mixingEDensity_ = 
     (
         sigma_ 
       * capillaryWidth_
       * Foam::pow(scalar(2.0),scalar(0.5) + Tr_.value())
-      / calc2F1(0.5,(Tr_.value() + scalar(1)) / scalar(-2),scalar(1.5),scalar(1))
+      / calc2F1(0.5,(Tr_.value() + scalar(1))/scalar(-2),scalar(1.5),scalar(1))
     );
 
     Info << "Mixing Energy Density = " << mixingEDensity_.value() << endl;
@@ -120,11 +119,11 @@ scalarField twoPhaseMixture::boundarySlope(const scalarField& curAlpha1_)
         scalar(-1)
       * cos
         (
-            theta_.value() * pi / scalar(180)
+            theta_.value()*pi/scalar(180)
         )
       * sqrt
         (
-            scalar(2) * mixingEscalar(curAlpha1_)
+            scalar(2)*mixingEscalar(curAlpha1_)
         )
       / capillaryWidth_.value()
     );
@@ -139,7 +138,7 @@ scalarField twoPhaseMixture::mixingEscalar(const scalarField& cAlpha1_)
     (
         new scalarField
         (
-            Foam::pow(mag(limitedAlpha1 * (scalar(1) - limitedAlpha1)), scalar(1) + Tr_.value())
+            Foam::pow(mag(limitedAlpha1*(scalar(1) - limitedAlpha1)), scalar(1) + Tr_.value())
         )
     );
 }
@@ -260,8 +259,8 @@ tmp<volScalarField> twoPhaseMixture::mu(const volScalarField& alpha1New_) const
         new volScalarField
         (
             "mu",
-            limitedAlpha1 * rho1_ * nuModel1_->nu()
-          + (scalar(1) - limitedAlpha1) * rho2_ * nuModel2_->nu()
+            limitedAlpha1*rho1_*nuModel1_->nu()
+          + (scalar(1) - limitedAlpha1)*rho2_*nuModel2_->nu()
         )
     );
 }
@@ -279,7 +278,7 @@ tmp<surfaceScalarField> twoPhaseMixture::muf(const volScalarField& alpha1New_) c
         new surfaceScalarField
         (
             "muf",
-            alpha1f * rho1_ * fvc::interpolate(nuModel1_->nu()) + (scalar(1) - alpha1f) * rho2_ * fvc::interpolate(nuModel2_->nu())
+            alpha1f*rho1_*fvc::interpolate(nuModel1_->nu()) + (scalar(1) - alpha1f)*rho2_*fvc::interpolate(nuModel2_->nu())
         )
     );
 }
@@ -298,8 +297,8 @@ tmp<Foam::surfaceScalarField> Foam::twoPhaseMixture::nuf() const
         (
             "nuf",
             (
-                alpha1f * rho1_ * fvc::interpolate(nuModel1_->nu()) + (scalar(1) - alpha1f) * rho2_ * fvc::interpolate(nuModel2_->nu())
-            ) / (alpha1f * rho1_ + (scalar(1) - alpha1f) * rho2_)
+                alpha1f*rho1_*fvc::interpolate(nuModel1_->nu()) + (scalar(1) - alpha1f)*rho2_*fvc::interpolate(nuModel2_->nu())
+            )/(alpha1f*rho1_ + (scalar(1) - alpha1f)*rho2_)
         )
     );
 }
@@ -322,11 +321,11 @@ tmp<surfaceScalarField> twoPhaseMixture::diffusivityF(const surfaceScalarField& 
           * (
                 Tr_.value()
               - (
-                    scalar(4) * Tr_.value() + scalar(2)
+                    scalar(4)*Tr_.value() + scalar(2)
                 )
               * alpha1New_
             )
-        * Foam::pow
+          * Foam::pow
             (
                 mag
                 (
@@ -347,7 +346,7 @@ tmp<volScalarField> twoPhaseMixture::rhoMix(const volScalarField& alpha1New_) co
         new volScalarField
         (
             "rho",
-            (scalar(1) - limitedAlpha1) * rho2_ + limitedAlpha1 * rho1_
+            (scalar(1) - limitedAlpha1)*rho2_ + limitedAlpha1*rho1_
         )
     );
 }
@@ -362,7 +361,7 @@ tmp<surfaceScalarField> twoPhaseMixture::rhoMixF(const volScalarField& alpha1New
         (
             "rho",
             (
-                (scalar(1) - limitedAlpha1f) * rho2_ + limitedAlpha1f * rho1_
+                (scalar(1) - limitedAlpha1f)*rho2_ + limitedAlpha1f*rho1_
             )
         )
     );
@@ -376,7 +375,7 @@ tmp<volScalarField> twoPhaseMixture::alpha1Angle(const volScalarField& alpha1New
         new volScalarField
         (
             "angle",
-            (min(max(alpha1New_,filterAlpha_),scalar(1) - filterAlpha_) - scalar(0.5)) / (scalar(1) - scalar(2) * filterAlpha_) * pi
+            (min(max(alpha1New_,filterAlpha_),scalar(1) - filterAlpha_) - scalar(0.5)) / (scalar(1) - scalar(2)*filterAlpha_)*pi
         )
     );
 }
@@ -384,7 +383,7 @@ tmp<volScalarField> twoPhaseMixture::alpha1Angle(const volScalarField& alpha1New
 //-Return multiplier term
 dimensionedScalar twoPhaseMixture::alpha1Multiplier() const
 {
-    return sqr(scalar(0.5) * pi / (scalar(1) - scalar(2) * filterAlpha_));
+    return sqr(scalar(0.5)*pi/(scalar(1) - scalar(2)*filterAlpha_));
 }
 
 
@@ -422,11 +421,9 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
     //-Cycle through each boundary, current boundary indicated by patchi within the loop
     forAll(patches, patchi)
     {
-
         //-Check to see if the current boundary is a fixedGradient type
         if (isA<fixedGradientFvPatchScalarField>(curAlpha1_.boundaryField()[patchi]))
         {
-
             //-Create a reference to the patch field.  note that this variable can be treated
             // as a scalar field containing the values of curAlpha1_ on the boundary face
             fixedGradientFvPatchScalarField& curPatch = refCast<fixedGradientFvPatchScalarField>(curAlpha1_.boundaryField()[patchi]);
@@ -448,23 +445,23 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
             //-Recalculate the value of curAlpha1 on the boundary faces
             curPatch.evaluate();
 
-            scalarField upperFilter = pos(curPatch-scalar(1));
+            scalarField upperFilter = pos(curPatch - scalar(1));
             scalarField lowerFilter = pos(scalar(-1)*curPatch);
 
             //-Create a safetyFactor to avoid division by zero when the boundary alpha1 = 0 or 1, or when a zero-gradient is used
             // Determines location where alpha1 is 0 & 1
-            scalarField safetyFactor = (pos(curPatch-zeroAlpha1+scalar(0.00001)) - neg(zeroAlpha1 - curPatch +scalar(0.00001))) * scalar(0.0001);
+            scalarField safetyFactor = (pos(curPatch - zeroAlpha1 + scalar(0.00001)) - neg(zeroAlpha1 - curPatch + scalar(0.00001)))*scalar(0.0001);
         
             //-Perform the slope adjustment to ensure the boundary value of alpha1 is >= 0 and <= 1.
             gradAlpha1 *= 
             (
-                upperFilter * (scalar(1) - zeroAlpha1) / (curPatch - zeroAlpha1 + safetyFactor)
-              + lowerFilter * (scalar(-1) * zeroAlpha1) / (curPatch - zeroAlpha1 + safetyFactor)
+                upperFilter*(scalar(1) - zeroAlpha1)/(curPatch - zeroAlpha1 + safetyFactor)
+              + lowerFilter*(scalar(-1)*zeroAlpha1)/(curPatch - zeroAlpha1 + safetyFactor)
               + (scalar(1) - upperFilter - lowerFilter)
             );
             
             curPatch.evaluate();  
-            Info << "Boundary Min: " << min(curPatch * (scalar(1) - curPatch)) << endl;
+            Info << "Boundary Min: " << min(curPatch*(scalar(1) - curPatch)) << endl;
         }
     }
 
@@ -476,9 +473,8 @@ dimensionedScalar twoPhaseMixture::epsTOne()
 {
     //-This formulation applies to the TVSED energy function
     // Variable units: [capillaryWidth] = (0 1 0 0 0 0 0)
-    
-    return  thickness_ / Foam::pow(scalar(2),scalar(1.5)) / (scalar(1) - scalar(2) * filterAlpha_) 
-                       / calc2F1(scalar(0.5),scalar(1),scalar(1.5),sqr(scalar(1) - scalar(2) * filterAlpha_.value()));
+    return  thickness_/Foam::pow(scalar(2),scalar(1.5))/(scalar(1) - scalar(2)*filterAlpha_) 
+                      /calc2F1(scalar(0.5),scalar(1),scalar(1.5),sqr(scalar(1) - scalar(2)*filterAlpha_.value()));
 }
 
 dimensionedScalar twoPhaseMixture::mixingEDensityTOne()
@@ -489,7 +485,7 @@ dimensionedScalar twoPhaseMixture::mixingEDensityTOne()
       * Foam::pow(epsTOne(),scalar(2))
       * Foam::pow(scalar(2),scalar(2.5) - Tr_.value())
       / capillaryWidth_
-      / (calc2F1(scalar(0.5),(Tr_.value() - scalar(3)) / scalar(2),scalar(1.5),scalar(1)))
+      / (calc2F1(scalar(0.5),(Tr_.value() - scalar(3))/scalar(2),scalar(1.5),scalar(1)))
     );
 }
 

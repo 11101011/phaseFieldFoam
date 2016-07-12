@@ -3,16 +3,16 @@
     volScalarField rAU("rAU",1.0/UEqn.A());
     surfaceScalarField rAUf("rAUf",fvc::interpolate(rAU));
 
-    surfaceScalarField rhof = twoPhaseProperties.rhoMixF(scalar(0.5) * (alpha1 + alpha1.oldTime()));
+    surfaceScalarField rhof = twoPhaseProperties.rhoMixF(scalar(0.5)*(alpha1 + alpha1.oldTime()));
 
     //-Solve for the velocity based on the velocity terms described in UEqn.
     volVectorField HbyA("HbyA",U);
-    HbyA = rAU * UEqn.H();
+    HbyA = rAU*UEqn.H();
 
     surfaceScalarField phiHbyA
     (
         "phiHbyA",
-        (fvc::interpolate(HbyA) & mesh.Sf())
+        (fvc::interpolate(HbyA)& mesh.Sf())
       + fvc::ddtPhiCorr(rAU, rho, U, phi)
     );
     
@@ -21,7 +21,7 @@
     
     surfaceScalarField phig
     (
-        K_SandG * rAUf
+        K_SandG*rAUf
     );
 
     phiHbyA -= phig;
@@ -49,7 +49,7 @@
     
     #include "continuityErrs.H"
     
-    p == p_rgh + rho * gh;
+    p == p_rgh + rho*gh;
 
     if (p_rgh.needReference())
     {
@@ -59,5 +59,5 @@
             p.dimensions(),
             pRefValue - getRefCellValue(p, pRefCell)
         );
-        p_rgh = p - rho * gh;
+        p_rgh = p - rho*gh;
     }

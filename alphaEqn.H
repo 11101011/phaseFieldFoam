@@ -2,14 +2,14 @@
         //-Solve the alpha1 equation at the current time step and
         // calculate the laplacian of the alpha1 field and the diffusive flux.
 
-        surfaceScalarField gAlpha1 = fvc::snGrad(alpha1) * mesh.magSf();
-        surfaceScalarField glapAlpha1 = fvc::snGrad(fvc::laplacian(alpha1)) * mesh.magSf();
+        surfaceScalarField gAlpha1 = fvc::snGrad(alpha1)*mesh.magSf();
+        surfaceScalarField glapAlpha1 = fvc::snGrad(fvc::laplacian(alpha1))*mesh.magSf();
 
         #include "mobEqn.H"
 
-        surfaceScalarField alpha1Energy = fvc::interpolate(alpha1) * (scalar(1) - fvc::interpolate(alpha1));
+        surfaceScalarField alpha1Energy = fvc::interpolate(alpha1)*(scalar(1) - fvc::interpolate(alpha1));
 
-        difFlux = twoPhaseProperties.mobility() * pos(alpha1Energy) * 
+        difFlux = twoPhaseProperties.mobility()*pos(alpha1Energy)*
         (   
             (
                 alpha1Energy
@@ -34,11 +34,11 @@
         )
     );
 
-    rhoPhi = (difFlux + fvc::flux(phi,alpha1,"div(phi,alpha1)")) * (rho1 - rho2) + phi*rho2;
-    rhoPhiSum += rhoPhi * K_Multiplier;
+    rhoPhi = (difFlux + fvc::flux(phi,alpha1,"div(phi,alpha1)"))*(rho1 - rho2) + phi*rho2;
+    rhoPhiSum += rhoPhi*K_Multiplier;
 
     //-Solve for the new value of alpha1
-    alpha1 = alpha1.oldTime() + runTime.deltaT() * T_Multiplier * tempK_Alpha1;
+    alpha1 = alpha1.oldTime() + runTime.deltaT()*T_Multiplier*tempK_Alpha1;
 
     twoPhaseProperties.updateContactAngle(alpha1);
 
