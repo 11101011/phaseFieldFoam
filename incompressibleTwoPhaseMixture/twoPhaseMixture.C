@@ -386,30 +386,6 @@ dimensionedScalar twoPhaseMixture::alpha1Multiplier() const
     return sqr(scalar(0.5)*pi/(scalar(1) - scalar(2)*filterAlpha_));
 }
 
-
-bool twoPhaseMixture::read()
-{
-    if (transportModel::read())
-    {
-        if (nuModel1_().read(*this) && nuModel2_().read(*this))
-        {
-            nuModel1_->viscosityProperties().lookup("rho") >> rho1_;
-            nuModel2_->viscosityProperties().lookup("rho") >> rho2_;
-
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
 void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
 {
     //-Create a pointer to the mesh
@@ -487,6 +463,32 @@ dimensionedScalar twoPhaseMixture::mixingEDensityTOne()
       / capillaryWidth_
       / (calc2F1(scalar(0.5),(Tr_.value() - scalar(3))/scalar(2),scalar(1.5),scalar(1)))
     );
+}
+
+bool twoPhaseMixture::read()
+{
+    if (transportModel::read())
+    {
+        if 
+        (
+            nuModel1_().read(subDict(phase1Name_)) 
+         && nuModel2_().read(subDict(phase2Name_))
+        )
+        {
+            nuModel1_->viscosityProperties().lookup("rho") >> rho1_;
+            nuModel2_->viscosityProperties().lookup("rho") >> rho2_;
+
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
