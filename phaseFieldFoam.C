@@ -55,8 +55,6 @@ int main(int argc, char *argv[])
     #include "createDynamicFvMesh.H"
     
     pimpleControl pimple(mesh);
-    //surfaceScalarField phiAbs("phiAbs", phi);
-    //fvc::makeAbsolute(phiAbs, U);
     
     #include "initContinuityErrs.H"
     #include "createFields.H"
@@ -85,18 +83,8 @@ int main(int argc, char *argv[])
         
         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
  
-        {
-            // Calculate the relative velocity used to map the relative flux phi
-            volVectorField Urel("Urel", U);
-
-            if (mesh.moving())
-            {
-                Urel -= fvc::reconstruct(fvc::meshPhi(U));
-            }
-
-            // Do any mesh changes
-            mesh.update();
-        }
+        // Do any mesh changes
+        mesh.update();
     
         if (mesh.changing())
         {
@@ -120,7 +108,7 @@ int main(int argc, char *argv[])
         
         //---------------------------------------------------//
 
-        //fvc::makeRelative(phi, U);
+        fvc::makeRelative(phi, U);
         twoPhaseProperties.correct();
         
         //- Update the refinement field indicator
