@@ -98,7 +98,7 @@ void twoPhaseMixture::calcMixingEDensity()
         sigma_ 
       * capillaryWidth_
       * Foam::pow(scalar(2.0),scalar(0.5) + Tr_.value())
-      / calc2F1(0.5,(Tr_.value() + scalar(1))/scalar(-2),scalar(1.5),scalar(1))
+      / calc2F1(scalar(0.5),(Tr_.value() + scalar(1))/scalar(-2),scalar(1.5),scalar(1))
     );
 
     Info << "Mixing Energy Density = " << mixingEDensity_.value() << endl;
@@ -124,8 +124,7 @@ scalarField twoPhaseMixture::boundarySlope(const scalarField& curAlpha1_)
       * sqrt
         (
             scalar(2)*mixingEscalar(curAlpha1_)
-        )
-      / capillaryWidth_.value()
+        )/ capillaryWidth_.value()
     );
     return slope_;
 }
@@ -297,7 +296,8 @@ tmp<Foam::surfaceScalarField> Foam::twoPhaseMixture::nuf() const
         (
             "nuf",
             (
-                alpha1f*rho1_*fvc::interpolate(nuModel1_->nu()) + (scalar(1) - alpha1f)*rho2_*fvc::interpolate(nuModel2_->nu())
+                alpha1f*rho1_*fvc::interpolate(nuModel1_->nu()) 
+              + (scalar(1) - alpha1f)*rho2_*fvc::interpolate(nuModel2_->nu())
             )/(alpha1f*rho1_ + (scalar(1) - alpha1f)*rho2_)
         )
     );
