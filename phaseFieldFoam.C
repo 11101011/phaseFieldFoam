@@ -41,11 +41,10 @@ Description
 
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
+#include "interfaceProperties.H"
 #include "twoPhaseMixture.H"
-#include "turbulenceModel.H"
 #include "pimpleControl.H"
 #include "fvIOoptionList.H"
-#include "interfaceProperties.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,20 +53,20 @@ int main(int argc, char *argv[])
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createDynamicFvMesh.H"
+    
+    pimpleControl pimple(mesh);
+//     surfaceScalarField phiAbs("phiAbs", phi);
+//     fvc::makeAbsolute(phiAbs, U);
+    
     #include "initContinuityErrs.H"
     #include "createFields.H"
     #include "readTimeControls.H"
-    
-    pimpleControl pimple(mesh);
-    
-    surfaceScalarField phiAbs("phiAbs", phi);
-    fvc::makeAbsolute(phiAbs, U);
-    
     #include "correctPhi.H"
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
 
@@ -76,7 +75,6 @@ int main(int argc, char *argv[])
         #include "readControls.H"
         #include "CourantNo.H"
         #include "alphaCourantNo.H"
-        
         #include "setDeltaT.H"
 
         runTime++;
@@ -84,6 +82,7 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << nl << endl;
         
         //---------------------------------------------------//
+        
         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
  
         {
@@ -99,18 +98,6 @@ int main(int argc, char *argv[])
             mesh.update();
         }
 
-        //- Update the refinement field indicator
-        gradAlpha1Field = twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))
-                        / Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
-                        - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5));
-
-        {
-            volScalarField checkAlpha1 = scalar(10)*(pos(alpha1 - twoPhaseProperties.filterAlpha()/scalar(2)) - neg(scalar(1) 
-                                       - twoPhaseProperties.filterAlpha()/scalar(2) - alpha1));
-
-            gradAlpha1Field += checkAlpha1;
-        }
-
         //- Do any mesh changes
         mesh.update();
     
@@ -123,7 +110,6 @@ int main(int argc, char *argv[])
             gh = g& mesh.C();
             ghf = g& mesh.Cf();
         }
-        //---------------------------------------------------//
 
         if (mesh.changing() && correctPhi)
         {
@@ -134,8 +120,22 @@ int main(int argc, char *argv[])
         {
             #include "meshCourantNo.H"
         }
+        
+        //---------------------------------------------------//
 
-        fvc::makeRelative(phi, U);
+        //- Update the refinement field indicator
+        gradAlpha1Field = twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))
+                        / Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
+                        - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5));
+
+        {
+            volScalarField checkAlpha1 = scalar(10)*(pos(alpha1 - twoPhaseProperties.filterAlpha()/scalar(2)) - neg(scalar(1) 
+                                       - twoPhaseProperties.filterAlpha()/scalar(2) - alpha1));
+
+            gradAlpha1Field += checkAlpha1;
+        }
+
+//         fvc::makeRelative(phi, U);
         twoPhaseProperties.correct();
 
         //- RungeKutta 4th order method
