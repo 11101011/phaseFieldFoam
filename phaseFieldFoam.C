@@ -97,9 +97,6 @@ int main(int argc, char *argv[])
             // Do any mesh changes
             mesh.update();
         }
-
-        //- Do any mesh changes
-        mesh.update();
     
         if (mesh.changing())
         {
@@ -123,6 +120,9 @@ int main(int argc, char *argv[])
         
         //---------------------------------------------------//
 
+        //fvc::makeRelative(phi, U);
+        twoPhaseProperties.correct();
+        
         //- Update the refinement field indicator
         gradAlpha1Field = twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))
                         / Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
@@ -134,9 +134,6 @@ int main(int argc, char *argv[])
 
             gradAlpha1Field += checkAlpha1;
         }
-
-//         fvc::makeRelative(phi, U);
-        twoPhaseProperties.correct();
 
         //- RungeKutta 4th order method
         volScalarField K_alpha1 ("K_alpha1", alpha1*scalar(0)/runTime.deltaT());
