@@ -1,10 +1,10 @@
-    //-Create a temporal alpha1
+    //- Create a temporal alpha1
     volScalarField tmpA("alpha1", (alpha1 + alpha1.oldTime())/scalar(2));
 
-    //-Pre-calculate grad(alpha1) to reduce comp. time
+    //- Pre-calculate grad(alpha1) to reduce comp. time
     gradAlpha1 = fvc::grad(min(max(tmpA,scalar(0)),scalar(1)));
 
-    //-Surface force using kim's model
+    //- Surface force using kim's model
     volScalarField Curvature = 
     fvc::div
     (
@@ -27,7 +27,7 @@
 
     surfaceScalarField muf = twoPhaseProperties.muf(alpha1);
 
-    //-Calculate the final uncorrected velocity field from K_U
+    //- Calculate the final uncorrected velocity field from K_U
     fvVectorMatrix UEqn
     (
         fvm::ddt(rho, U)
@@ -37,12 +37,3 @@
     );
 
     UEqn.relax();
-
-    surfaceScalarField K_SandG
-    (
-        "K_SandG",
-        (
-            (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
-          - fvc::snGrad(rho)*ghf*mesh.magSf()
-        )
-    );

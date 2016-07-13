@@ -15,13 +15,16 @@
         (fvc::interpolate(HbyA)& mesh.Sf())
       + fvc::ddtPhiCorr(rAU, rho, U, phi)
     );
-    
+
     adjustPhi(phiHbyA, U, p_rgh);
     phi = phiHbyA;
-    
+
     surfaceScalarField phig
     (
-        K_SandG*rAUf
+        (
+            (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
+          - ghf*fvc::snGrad(rho)
+        )*rAUf*mesh.magSf()
     );
 
     phiHbyA += phig;
@@ -46,9 +49,9 @@
             fvOptions.correct(U);
         }
     }
-    
+
     #include "continuityErrs.H"
-    
+
     p == p_rgh + rho*gh;
 
     if (p_rgh.needReference())
