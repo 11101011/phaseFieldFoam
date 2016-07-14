@@ -35,5 +35,14 @@
       - fvm::laplacian(muf,U)
       - (fvc::grad(U)& fvc::grad(muf))
     );
-
+    
+    surfaceScalarField K_SandG
+    (
+        "K_SandG",
+        (
+            (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
+          - fvc::snGrad(rho)*ghf*mesh.magSf()
+        )
+    );
+    
     UEqn.relax();

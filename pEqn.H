@@ -21,10 +21,7 @@
 
     surfaceScalarField phig
     (
-        (
-            (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
-          - ghf*fvc::snGrad(rho)
-        )*rAUf*mesh.magSf()
+        K_SandG*rAUf
     );
 
     phiHbyA += phig;
