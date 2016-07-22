@@ -10,13 +10,12 @@
             IOobject::NO_WRITE
         )
     );
-
-    Info<< "Reading field p_rgh\n" << endl;
-    volScalarField p_rgh
+    
+    surfaceScalarField difFlux
     (
         IOobject
         (
-            "p_rgh",
+            "difFlux",
             runTime.timeName(),
             mesh,
             IOobject::MUST_READ,
@@ -24,12 +23,13 @@
         ),
         mesh
     );
-
-    surfaceScalarField difFlux
+    
+    Info<< "Reading field p_rgh\n" << endl;
+    volScalarField p_rgh
     (
         IOobject
         (
-            "difFlux",
+            "p_rgh",
             runTime.timeName(),
             mesh,
             IOobject::MUST_READ,
@@ -53,10 +53,10 @@
     );
 
     #include "createPhi.H"
-
+    phi = fvc::interpolate(U)& mesh.Sf();
     
-    //-For input, to avoid precalculation, the alpha1 field simply must
-    // be = 1 for liquid, and 0 for gas, and vary in between to set the interface
+    //- For input, to avoid precalculation, the alpha1 field simply must
+    //  be = 1 for liquid, and 0 for gas, and vary in between to set the interface
     
     Info<< "Reading transportProperties\n" << endl;
     twoPhaseMixture twoPhaseProperties(U, phi, transportProperties);
@@ -92,9 +92,7 @@
       - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5))
     );
 
-    //phi = fvc::interpolate(U)& mesh.Sf();
-
-    //-Need to store rho for ddt(rho, U)
+    //- Need to store rho for ddt(rho, U)
     volScalarField rho
     (
         IOobject
@@ -105,7 +103,6 @@
             IOobject::READ_IF_PRESENT
         ),
         alpha1*rho1 + (scalar(1) - alpha1)*rho2,
-        /*twoPhaseProperties.rhoMix(alpha1)*/
         alpha1.boundaryField().types()
     );
     rho.oldTime();
@@ -125,12 +122,12 @@
         ),
         fvc::interpolate(rho)*phi
     );
-    
-    //-Construct interface from alpha1 distribution
+
+    //- Construct interface from alpha1 distribution
     interfaceProperties interface(alpha1, U, twoPhaseProperties);
-    
+
     #include "readGravitationalAcceleration.H"
-    
+
     Info << "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g& mesh.C());
     surfaceScalarField ghf("ghf",g& mesh.Cf());
@@ -147,7 +144,7 @@
         ),
         p_rgh + rho*gh
     );
-    
+
     label pRefCell = 0;
     scalar pRefValue = 0.0;
     setRefCell

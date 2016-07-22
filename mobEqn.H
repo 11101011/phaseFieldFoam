@@ -17,6 +17,8 @@
 
     difCoNum = max(difCoNum,scalar(1e-16));
 
-    dimensionedScalar newMobility("mobility",dimensionSet(0,2,-1,0,0,0,0),twoPhaseProperties.mobilityCourantNo()/difCoNum);
+    dimensionedScalar newMobility("mobility",dimensionSet(0,2,-1,0,0,0,0),
+                                  twoPhaseProperties.mobilityCourantNo()/difCoNum);
+    
     twoPhaseProperties.setMobility(newMobility);
 }

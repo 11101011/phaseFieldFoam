@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         scalar T_Multiplier = scalar(0);
         scalar K_Multiplier = scalar(0);
 
-        Info << "Solving U and Alpha1 RK4 Equations: ";
+        Info<< "Solving U and Alpha1 RK4 Equations: ";
 
         for (int i=0; i<=3; i++)
         {
@@ -141,8 +141,8 @@ int main(int argc, char *argv[])
             #include "alphaEqn.H"
             K_alpha1 += K_Multiplier*tempK_Alpha1;
         }
-
-        Info << " ... Complete" << endl;
+        
+        Info<< " ... Complete" << endl;
 
         alpha1 = alpha1.oldTime() + runTime.deltaT()*K_alpha1;
         twoPhaseProperties.updateContactAngle(alpha1);
@@ -156,7 +156,8 @@ int main(int argc, char *argv[])
                 << "  Max(alpha1) = " << max(alpha1).value()
                 << endl;
         }
-        rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
+//         rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
+        rho = alpha1*rho1 + (scalar(1) - alpha1)*rho2;
         rhoPhi = rhoPhiSum;
 
         //- Pressure-velocity PIMPLE corrector loop

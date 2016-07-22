@@ -375,7 +375,7 @@ tmp<volScalarField> twoPhaseMixture::alpha1Angle(const volScalarField& alpha1New
         new volScalarField
         (
             "angle",
-            (min(max(alpha1New_,filterAlpha_),scalar(1) - filterAlpha_) - scalar(0.5)) / (scalar(1) - scalar(2)*filterAlpha_)*pi
+            (min(max(alpha1New_,filterAlpha_),scalar(1) - filterAlpha_) - scalar(0.5))/(scalar(1) - scalar(2)*filterAlpha_)*pi
         )
     );
 }
