@@ -167,7 +167,6 @@ int main(int argc, char *argv[])
                 << endl;
         }
         rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1+alpha1.oldTime()));
-//         rho = alpha1*rho1 + (scalar(1) - alpha1)*rho2;
         rhoPhi = rhoPhiSum;
 
         //- Pressure-velocity PIMPLE corrector loop
