@@ -83,6 +83,23 @@ int main(int argc, char *argv[])
         
         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
  
+        //- Update the refinement field indicator
+        gradAlpha1Field = 
+        twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))/Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
+      - twoPhaseProperties.filterAlpha()), (scalar(1)
+      + twoPhaseProperties.temperature())*scalar(0.5));
+
+        {
+            volScalarField checkAlpha1 =
+            scalar(10)*(pos(alpha1 
+          - twoPhaseProperties.filterAlpha()/scalar(2)) 
+          - neg(scalar(1) 
+          - twoPhaseProperties.filterAlpha()/scalar(2) 
+          - alpha1));
+
+            gradAlpha1Field += checkAlpha1;
+        }
+        
         // Do any mesh changes
         mesh.update();
     
@@ -90,7 +107,8 @@ int main(int argc, char *argv[])
         {
             Info<< "Execution time for mesh.update() = "
                 << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
-                << " s" << endl;
+                << " s"
+                << endl;
 
             gh = g& mesh.C();
             ghf = g& mesh.Cf();
@@ -107,21 +125,10 @@ int main(int argc, char *argv[])
         }
         
         //---------------------------------------------------//
-
+        
+        //- Estimate relative flux
         fvc::makeRelative(phi, U);
         twoPhaseProperties.correct();
-        
-        //- Update the refinement field indicator
-        gradAlpha1Field = twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))
-                        / Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
-                        - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5));
-
-        {
-            volScalarField checkAlpha1 = scalar(10)*(pos(alpha1 - twoPhaseProperties.filterAlpha()/scalar(2)) - neg(scalar(1) 
-                                       - twoPhaseProperties.filterAlpha()/scalar(2) - alpha1));
-
-            gradAlpha1Field += checkAlpha1;
-        }
 
         //- RungeKutta 4th order method
         volScalarField K_alpha1 ("K_alpha1", alpha1*scalar(0)/runTime.deltaT());
@@ -136,7 +143,8 @@ int main(int argc, char *argv[])
         {
             Info << " " << scalar(i);
             T_Multiplier = scalar(0.5) + scalar(i/2)*scalar(0.5);
-            K_Multiplier = scalar(1)/(scalar(3) + scalar(3)*mag(scalar(1) - scalar((i + 1)/scalar(2))));
+            K_Multiplier = scalar(1)/(scalar(3) + scalar(3)*mag(scalar(1) 
+          - scalar((i + 1)/scalar(2))));
 
             #include "alphaEqn.H"
             K_alpha1 += K_Multiplier*tempK_Alpha1;
@@ -152,12 +160,14 @@ int main(int argc, char *argv[])
         
             Info<< "Phase-1 volume fraction = "
                 << alpha1.weightedAverage(mesh.Vsc()).value()
-                << "  Min(alpha1) = " << min(alpha1).value()
-                << "  Max(alpha1) = " << max(alpha1).value()
+                << "  Min(alpha1) = "
+                << min(alpha1).value()
+                << "  Max(alpha1) = "
+                << max(alpha1).value()
                 << endl;
         }
-//         rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
-        rho = alpha1*rho1 + (scalar(1) - alpha1)*rho2;
+        rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1+alpha1.oldTime()));
+//         rho = alpha1*rho1 + (scalar(1) - alpha1)*rho2;
         rhoPhi = rhoPhiSum;
 
         //- Pressure-velocity PIMPLE corrector loop
@@ -171,15 +181,21 @@ int main(int argc, char *argv[])
                 #include "pEqn.H"
             }
         }
+        
+        #include "continuityErrs.H"
 
         runTime.write();
 
-        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
-            << nl << endl;
+        Info<< "ExecutionTime = "
+            << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = "
+            << runTime.elapsedClockTime() << " s"
+            << nl
+            << endl;
     }
 
-    Info << "End\n" << endl;
+    Info<< "End\n"
+        << endl;
 }
 
 // ************************************************************************* //

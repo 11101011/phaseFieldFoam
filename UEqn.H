@@ -13,16 +13,13 @@
             (
                 gradAlpha1/(mag(gradAlpha1) + scalar(1e-8)/pow(average(tmpA.mesh().V()),scalar(1)/scalar(3)))
             )
-        ) & mesh.Sf()
+        )& mesh.Sf()
     );
     
     volVectorField surfaceForceTerm
     (
         "div(lamdastar*beta*grad(alpha1)*grad(alpha1))",
-        twoPhaseProperties.mixingEDensity()
-      * Curvature
-      * mag(gradAlpha1)
-      * gradAlpha1
+        twoPhaseProperties.mixingEDensity()*Curvature*mag(gradAlpha1)*gradAlpha1
     );
 
     surfaceScalarField muf = twoPhaseProperties.muf(alpha1);
@@ -32,7 +29,7 @@
     (
         fvm::ddt(rho, U)
       - fvm::laplacian(muf,U)
-      - (fvc::grad(U) & fvc::grad(muf))
+      - (fvc::grad(U)& fvc::grad(muf))
       + fvm::div(rhoPhi,U)
     );
     
@@ -43,8 +40,7 @@
         "K_SandG",
         (
           - fvc::snGrad(rho)*ghf*mesh.magSf()
-          + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())
-          * neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
+          + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
         )
     );
     

@@ -55,15 +55,16 @@
     #include "createPhi.H"
     phi = fvc::interpolate(U)& mesh.Sf();
     
-    //- For input, to avoid precalculation, the alpha1 field simply must
-    //  be = 1 for liquid, and 0 for gas, and vary in between to set the interface
+    //-For input, to avoid precalculation, the alpha1 field simply must
+    // be = 1 for liquid, and 0 for gas, and vary in between to set the interface
     
     Info<< "Reading transportProperties\n" << endl;
     twoPhaseMixture twoPhaseProperties(U, phi, transportProperties);
+    
     volScalarField& alpha1(twoPhaseProperties.alpha1());
-
-    const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
-    const dimensionedScalar& rho2 = twoPhaseProperties.rho2();
+    
+    volScalarField rho = twoPhaseProperties.rhoMix(alpha1);
+    rho.oldTime();
 
     volVectorField gradAlpha1
     (
@@ -89,25 +90,11 @@
             IOobject::AUTO_WRITE
         ),
         twoPhaseProperties.capillaryWidth()*mag(gradAlpha1)/Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
-      - twoPhaseProperties.filterAlpha()),(scalar(1) + twoPhaseProperties.temperature())*scalar(0.5))
+      - twoPhaseProperties.filterAlpha()),(scalar(1)
+      + twoPhaseProperties.temperature())*scalar(0.5))
     );
-
-    //- Need to store rho for ddt(rho, U)
-    volScalarField rho
-    (
-        IOobject
-        (
-            "rho",
-            runTime.timeName(),
-            mesh,
-            IOobject::READ_IF_PRESENT
-        ),
-        alpha1*rho1 + (scalar(1) - alpha1)*rho2,
-        alpha1.boundaryField().types()
-    );
-    rho.oldTime();
     
-    // Mass flux
+    //-Mass flux
     // Initialisation does not matter because rhoPhi is reset after the
     // alpha1 solution before it is used in the U equation.
     surfaceScalarField rhoPhi
@@ -123,7 +110,7 @@
         fvc::interpolate(rho)*phi
     );
 
-    //- Construct interface from alpha1 distribution
+    //-Construct interface from alpha1 distribution
     interfaceProperties interface(alpha1, U, twoPhaseProperties);
 
     #include "readGravitationalAcceleration.H"

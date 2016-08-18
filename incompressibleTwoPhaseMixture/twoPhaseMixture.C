@@ -81,12 +81,14 @@ void twoPhaseMixture::calcCapillaryWidth()
 {
     //-This formulation applies to the TVSED energy function
     //-Variable units: [capillaryWidth] = (0 1 0 0 0 0 0)
-    
-    capillaryWidth_ = thickness_/Foam::pow(scalar(2),Tr_.value() + scalar(0.5))
-                    / (scalar(1) - scalar(2)*filterAlpha_)/calc2F1(scalar(0.5),(scalar(1) + Tr_.value())/
-                      scalar(2),scalar(1.5),sqr(scalar(1) - scalar(2)*filterAlpha_.value()));
 
-    Info << "Capillary Width = " << capillaryWidth_.value() << endl;
+    capillaryWidth_ = thickness_/Foam::pow(scalar(2),Tr_.value() + scalar(0.5))/(scalar(1) 
+  - scalar(2)*filterAlpha_)/calc2F1(scalar(0.5),(scalar(1) + Tr_.value())/scalar(2),scalar(1.5),sqr(scalar(1)
+  - scalar(2)*filterAlpha_.value()));
+
+    Info<< "Capillary Width = " 
+        << capillaryWidth_.value() 
+        << endl;
 }
 
 //-Calculates the mixing energy density, which controls the surface tension
@@ -95,20 +97,21 @@ void twoPhaseMixture::calcMixingEDensity()
     //-The following entry is for the standard surface tension expression
     mixingEDensity_ = 
     (
-        sigma_ 
-      * capillaryWidth_
-      * Foam::pow(scalar(2.0),scalar(0.5) + Tr_.value())
-      / calc2F1(scalar(0.5),(Tr_.value() + scalar(1))/scalar(-2),scalar(1.5),scalar(1))
+        sigma_*capillaryWidth_*Foam::pow(scalar(2.0),scalar(0.5)
+      + Tr_.value())/calc2F1(scalar(0.5),(Tr_.value()
+      + scalar(1))/scalar(-2),scalar(1.5),scalar(1))
     );
 
-    Info << "Mixing Energy Density = " << mixingEDensity_.value() << endl;
+    Info<< "Mixing Energy Density = " 
+        << mixingEDensity_.value() 
+        << endl;
 }
 
 //-Returns the TVSED Energy function value at curAlpha1_
 dimensionedScalar twoPhaseMixture::mixingE(const scalar curAlpha1_)
 {
     dimensionedScalar scaledAlpha1_ ("alpha1",dimensionSet(0,0,0,0,0,0,0),curAlpha1_);
-    return Foam::pow(mag(scaledAlpha1_ * (scalar(1) - scaledAlpha1_)),scalar(1) + Tr_.value());
+    return Foam::pow(mag(scaledAlpha1_*(scalar(1) - scaledAlpha1_)),scalar(1) + Tr_.value());
 }
 
 //-Slope function for the contact angle gradient calculation
@@ -116,23 +119,22 @@ scalarField twoPhaseMixture::boundarySlope(const scalarField& curAlpha1_)
 {
     scalarField slope_ = 
     (
-        scalar(-1)
-      * cos
+        scalar(-1)*cos
         (
             theta_.value()*pi/scalar(180)
-        )
-      * sqrt
+        )*sqrt
         (
             scalar(2)*mixingEscalar(curAlpha1_)
         )/ capillaryWidth_.value()
     );
+
     return slope_;
 }
 
 scalarField twoPhaseMixture::mixingEscalar(const scalarField& cAlpha1_)
 {
     scalarField limitedAlpha1 = min(max(cAlpha1_,scalar(0)),scalar(1));
-    
+
     return tmp<scalarField> 
     (
         new scalarField
@@ -317,15 +319,13 @@ tmp<surfaceScalarField> twoPhaseMixture::diffusivityF(const surfaceScalarField& 
         new surfaceScalarField
         (
             "diffusivity",
-            (scalar(1) + Tr_.value())
-          * (
+            (scalar(1) + Tr_.value())*
+            (
                 Tr_.value()
               - (
                     scalar(4)*Tr_.value() + scalar(2)
-                )
-              * alpha1New_
-            )
-          * Foam::pow
+                )*alpha1New_
+            )*Foam::pow
             (
                 mag
                 (
@@ -449,19 +449,17 @@ dimensionedScalar twoPhaseMixture::epsTOne()
 {
     //-This formulation applies to the TVSED energy function
     // Variable units: [capillaryWidth] = (0 1 0 0 0 0 0)
-    return  thickness_/Foam::pow(scalar(2),scalar(1.5))/(scalar(1) - scalar(2)*filterAlpha_) 
-                      /calc2F1(scalar(0.5),scalar(1),scalar(1.5),sqr(scalar(1) - scalar(2)*filterAlpha_.value()));
+    return  thickness_/Foam::pow(scalar(2),scalar(1.5))/(scalar(1) - scalar(2)*filterAlpha_)/calc2F1(scalar(0.5),scalar(1),scalar(1.5),sqr(scalar(1)
+  - scalar(2)*filterAlpha_.value()));
 }
 
 dimensionedScalar twoPhaseMixture::mixingEDensityTOne()
 {
     return 
     (
-        sigma_ 
-      * Foam::pow(epsTOne(),scalar(2))
-      * Foam::pow(scalar(2),scalar(2.5) - Tr_.value())
-      / capillaryWidth_
-      / (calc2F1(scalar(0.5),(Tr_.value() - scalar(3))/scalar(2),scalar(1.5),scalar(1)))
+        sigma_*Foam::pow(epsTOne(),scalar(2))*Foam::pow(scalar(2),scalar(2.5)
+      - Tr_.value())/capillaryWidth_/(calc2F1(scalar(0.5),(Tr_.value()
+      - scalar(3))/scalar(2),scalar(1.5),scalar(1)))
     );
 }
 
@@ -469,7 +467,7 @@ bool twoPhaseMixture::read()
 {
     if (transportModel::read())
     {
-        if 
+        if
         (
             nuModel1_().read(subDict(phase1Name_)) 
          && nuModel2_().read(subDict(phase2Name_))

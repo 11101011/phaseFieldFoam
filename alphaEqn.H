@@ -12,13 +12,10 @@
         difFlux = twoPhaseProperties.mobility()*pos(alpha1Energy)*
         (   
             (
-                alpha1Energy
-              * sqr(twoPhaseProperties.capillaryWidth())
-              * glapAlpha1
+                alpha1Energy*sqr(twoPhaseProperties.capillaryWidth())*glapAlpha1
             )
           - (
-                twoPhaseProperties.diffusivityF(alpha1Energy)
-              * gAlpha1
+                twoPhaseProperties.diffusivityF(alpha1Energy)*gAlpha1
             )
         );
 
@@ -34,7 +31,7 @@
         )
     );
 
-    rhoPhi = (difFlux + fvc::flux(phi,alpha1,"div(phi,alpha1)"))*(rho1 - rho2) + phi*rho2;
+    rhoPhi = (difFlux + fvc::flux(phi,alpha1,"div(phi,alpha1)"))*(twoPhaseProperties.rho1() - twoPhaseProperties.rho2()) + phi*twoPhaseProperties.rho2();
     rhoPhiSum += rhoPhi*K_Multiplier;
 
     //-Solve for the new value of alpha1
@@ -42,5 +39,5 @@
 
     twoPhaseProperties.updateContactAngle(alpha1);
 
-//     rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
-    rho = alpha1*rho1 + (scalar(1) - alpha1)*rho2;
+//     rho = alpha1*rho1 + (scalar(1) - alpha1)*rho2;
+    rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1+alpha1.oldTime()));

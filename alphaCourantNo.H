@@ -41,17 +41,18 @@ if (mesh.nInternalFaces())
 {
     scalarField sumPhi
     (
-        pos(alpha1 - scalar(0.01))*pos(scalar(0.99) - alpha1)
-       *fvc::surfaceSum(mag(phi))().internalField()
+        pos(alpha1 - scalar(0.01))*pos(scalar(0.99) - alpha1)*fvc::surfaceSum(mag(phi))().internalField()
     );
 
     alphaCoNum = scalar(0.5)*gMax(sumPhi/mesh.V().field())*runTime.deltaTValue();
 
-    meanAlphaCoNum =
-        scalar(0.5)*(gSum(sumPhi)/gSum(mesh.V().field()))*runTime.deltaTValue();
+    meanAlphaCoNum = scalar(0.5)*(gSum(sumPhi)/gSum(mesh.V().field()))*runTime.deltaTValue();
 }
 
-Info<< "Interface Courant Number mean: " << meanAlphaCoNum
-    << " max: " << alphaCoNum << endl;
+Info<< "Interface Courant Number mean: "
+    << meanAlphaCoNum
+    << " max: "
+    << alphaCoNum
+    << endl;
 
 // ************************************************************************* //

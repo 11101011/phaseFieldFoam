@@ -1,7 +1,7 @@
 {
     volScalarField tempAlpha1 = alpha1.oldTime() - fvc::div(difFlux)*runTime.deltaT()*T_Multiplier;
 
-    //- Limit at 0
+    //-Limit alpha field at 0
     volScalarField lowFilter
     (
         IOobject
@@ -18,7 +18,7 @@
     volScalarField newDelta = - fvc::div(fvc::interpolate(lowFilter)*difFlux)*runTime.deltaT()*T_Multiplier;
     lowFilter *= min(max((alpha1.oldTime() + newDelta)*lowFilter/sign(newDelta)/max(mag(newDelta),scalar(1e-32)),scalar(-4)),scalar(5));
 
-    //- Limit at 1
+    //-Limit alpha field at 1
     volScalarField highFilter
     (
         IOobject
