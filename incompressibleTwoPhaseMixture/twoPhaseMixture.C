@@ -409,7 +409,7 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
 
             //-Set the gradient to zero to get the adjacent cell values during the next evaluation call
             gradAlpha1 *= scalar(0);
-            
+
             //-Ensure the value of alpha1 is updated on the boundary face.  Equivalent to correctBoundaryConditions function
             curPatch.evaluate();
             
@@ -427,7 +427,7 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
             //-Create a safetyFactor to avoid division by zero when the boundary alpha1 = 0 or 1, or when a zero-gradient is used
             // Determines location where alpha1 is 0 & 1
             scalarField safetyFactor = (pos(curPatch - zeroAlpha1 + scalar(0.00001)) - neg(zeroAlpha1 - curPatch + scalar(0.00001)))*scalar(0.0001);
-        
+
             //-Perform the slope adjustment to ensure the boundary value of alpha1 is >= 0 and <= 1.
             gradAlpha1 *= 
             (
@@ -437,7 +437,10 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
             );
             
             curPatch.evaluate();  
-            Info << "Boundary Min: " << min(curPatch*(scalar(1) - curPatch)) << endl;
+
+            Info<< "Boundary Min: " 
+                << min(curPatch*(scalar(1) - curPatch)) 
+                << endl;
         }
     }
 
