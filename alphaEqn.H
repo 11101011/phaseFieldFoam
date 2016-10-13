@@ -39,4 +39,5 @@
 
     twoPhaseProperties.updateContactAngle(alpha1);
 
-    rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1+alpha1.oldTime()));
+    rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
+    rhoPhi = rhoPhiSum;

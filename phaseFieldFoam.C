@@ -127,11 +127,11 @@ int main(int argc, char *argv[])
         //---------------------------------------------------//
         
         //- Estimate relative flux
-        fvc::makeRelative(phi, U);
+        fvc::makeRelative(phi,U);
         twoPhaseProperties.correct();
 
         //- RungeKutta 4th order method
-        volScalarField K_alpha1 ("K_alpha1", alpha1*scalar(0)/runTime.deltaT());
+        volScalarField K_alpha1 ("K_alpha1",alpha1*scalar(0)/runTime.deltaT());
         surfaceScalarField rhoPhiSum = scalar(0)*rhoPhi;
 
         scalar T_Multiplier = scalar(0);
@@ -158,15 +158,11 @@ int main(int argc, char *argv[])
         {
            volScalarField tempVolFrac = pos(alpha1 - scalar(0.5));
         
-            Info<< "Phase-1 volume fraction = "
-                << alpha1.weightedAverage(mesh.Vsc()).value()
-                << "  Min(alpha1) = "
-                << min(alpha1).value()
-                << "  Max(alpha1) = "
-                << max(alpha1).value()
-                << endl;
+            Info<< "Phase-1 volume fraction = " << alpha1.weightedAverage(mesh.Vsc()).value()
+                << "  Min(alpha1) = " << min(alpha1).value() 
+                << "  Max(alpha1) = " << max(alpha1).value() << endl;
         }
-        rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1+alpha1.oldTime()));
+        rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
         rhoPhi = rhoPhiSum;
 
         //- Pressure-velocity PIMPLE corrector loop
@@ -185,16 +181,12 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = "
-            << runTime.elapsedClockTime() << " s"
-            << nl
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s" << nl
             << endl;
     }
 
-    Info<< "End\n"
-        << endl;
+    Info<< "End\n" << endl;
 }
 
 // ************************************************************************* //
