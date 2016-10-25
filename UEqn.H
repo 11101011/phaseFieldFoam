@@ -5,7 +5,7 @@
     gradAlpha1 = fvc::grad(min(max(tmpA,scalar(0)),scalar(1)));
 
     //- Surface force using kim's model
-    volScalarField Curvature = 
+    volScalarField Curvature =
     fvc::div
     (
         (
@@ -15,14 +15,15 @@
             )
         )& mesh.Sf()
     );
-    
+
     volVectorField surfaceForceTerm
     (
         "div(lamdastar*beta*grad(alpha1)*grad(alpha1))",
         twoPhaseProperties.mixingEDensity()*Curvature*mag(gradAlpha1)*gradAlpha1
     );
 
-    surfaceScalarField muf = twoPhaseProperties.muf(alpha1);
+    //-In the annex, muf is a function of tmpA
+    surfaceScalarField muf = twoPhaseProperties.muf(tmpA);
 
     //- Calculate the final uncorrected velocity field
     fvVectorMatrix UEqn
@@ -32,9 +33,9 @@
       - (fvc::grad(U)& fvc::grad(muf))
       + fvm::div(rhoPhi,U)
     );
-    
+
     UEqn.relax();
-    
+
     surfaceScalarField K_SandG
     (
         "K_SandG",
@@ -43,4 +44,4 @@
           + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
         )
     );
-    
+
