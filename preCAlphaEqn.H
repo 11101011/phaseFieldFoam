@@ -1,6 +1,6 @@
     {
-        //-Solve the alpha1 equation at the current time step and
-        // calculate the laplacian of the alpha1 field and the diffusive flux
+        //-Solve the alpha1 equation at the current time step
+        // Calculate the laplacian of the alpha1 field and the diffusive flux.
 
         gAlpha1 = fvc::snGrad(alpha1)*mesh.magSf();
         glapAlpha1 = fvc::snGrad(fvc::laplacian(alpha1))*mesh.magSf();

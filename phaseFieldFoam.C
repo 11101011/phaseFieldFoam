@@ -30,10 +30,10 @@ Description
     Cahn-Hilliard equation and the Navier-Stokes coupling for the 
     calculation of the phase field for two immiscible fluids by 
     diffusive and advective transport mechanisms.
-    
+
     Written by:
     Donaldson, Adam: Dalhousie University Halifax, Canada
-    
+
     Ported to OpenFOAM version 2.2.0:
     Weiss, Sebastian: TU Bergakademie Freiberg, Germany
 
@@ -53,62 +53,69 @@ int main(int argc, char *argv[])
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createDynamicFvMesh.H"
-    
-    pimpleControl pimple(mesh);
-    
     #include "initContinuityErrs.H"
     #include "createFields.H"
     #include "readTimeControls.H"
+
+    pimpleControl pimple(mesh);
+
     #include "correctPhi.H"
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
-    
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    bool t = true;
+    bool b = true;
 
     Info<< "\nStarting time loop\n" << endl;
 
     while (runTime.run())
     {
         #include "readControls.H"
-        #include "CourantNo.H"
-        #include "alphaCourantNo.H"
-        #include "setDeltaT.H"
+
+        if (t && (runTime.value()<=runTime.deltaTValue()))
+        {
+            #include "CourantNo.H"
+            #include "alphaCourantNo.H"
+
+            //-Adjust time step for preCPhaseFieldFoam
+            runTime.setDeltaT(deltaTZero);
+        }
+        else
+        {
+            #include "CourantNo.H"
+            #include "alphaCourantNo.H"
+            #include "setDeltaT.H"
+        }
 
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
-        
+
         //---------------------------------------------------//
-        
+
+        //-Common part of phaseFieldFoam and preCPhaseFieldFoam
         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
- 
-        //- Update the refinement field indicator
-        gradAlpha1Field = 
-        twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))/Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
-      - twoPhaseProperties.filterAlpha()), (scalar(1)
-      + twoPhaseProperties.temperature())*scalar(0.5));
 
         {
-            volScalarField checkAlpha1 =
-            scalar(10)*(pos(alpha1 
-          - twoPhaseProperties.filterAlpha()/scalar(2)) 
-          - neg(scalar(1) 
-          - twoPhaseProperties.filterAlpha()/scalar(2) 
-          - alpha1));
+            // Calculate the relative velocity used to map the relative flux phi
+            volVectorField Urel("Urel", U);
 
-            gradAlpha1Field += checkAlpha1;
+            if (mesh.moving())
+            {
+                Urel -= fvc::reconstruct(fvc::meshPhi(U));
+            }
+
+            // Do any mesh changes
+            mesh.update();
         }
-        
-        // Do any mesh changes
-        mesh.update();
-    
+
         if (mesh.changing())
         {
-            Info<< "Execution time for mesh.update() = "
+            Info<< "Execution time for mesh.update() = " 
                 << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
-                << " s"
-                << endl;
+                << " s" << endl;
 
             gh = g& mesh.C();
             ghf = g& mesh.Cf();
@@ -123,67 +130,47 @@ int main(int argc, char *argv[])
         {
             #include "meshCourantNo.H"
         }
-        
+
         //---------------------------------------------------//
-        
-        //- Estimate relative flux
-        fvc::makeRelative(phi,U);
-        twoPhaseProperties.correct();
 
-        //- RungeKutta 4th order method
-        volScalarField K_alpha1 ("K_alpha1",alpha1*scalar(0)/runTime.deltaT());
-        surfaceScalarField rhoPhiSum = scalar(0)*rhoPhi;
-
-        scalar T_Multiplier = scalar(0);
-        scalar K_Multiplier = scalar(0);
-
-        Info<< "Solving U and Alpha1 RK4 Equations: ";
-
-        for (int i=0; i<=3; i++)
+        if (t && (runTime.value()<=runTime.deltaTValue()))
         {
-            Info << " " << scalar(i);
-            T_Multiplier = scalar(0.5) + scalar(i/2)*scalar(0.5);
-            K_Multiplier = scalar(1)/(scalar(3) + scalar(3)*mag(scalar(1) 
-          - scalar((i + 1)/scalar(2))));
+            Info<< nl << "Running pre-conditioner:" << nl << endl;
+            t = false;
 
-            #include "alphaEqn.H"
-            K_alpha1 += K_Multiplier*tempK_Alpha1;
+            #include "preConditioner.H"
         }
-        
-        Info<< " ... Complete" << endl;
-
-        alpha1 = alpha1.oldTime() + runTime.deltaT()*K_alpha1;
-        twoPhaseProperties.updateContactAngle(alpha1);
-
+        else
         {
-           volScalarField tempVolFrac = pos(alpha1 - scalar(0.5));
-        
-            Info<< "Phase-1 volume fraction = " << alpha1.weightedAverage(mesh.Vsc()).value()
-                << "  Min(alpha1) = " << min(alpha1).value() 
-                << "  Max(alpha1) = " << max(alpha1).value() << endl;
-        }
-        rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1 + alpha1.oldTime()));
-        rhoPhi = rhoPhiSum;
-
-        //- Pressure-velocity PIMPLE corrector loop
-        while (pimple.loop())
-        {
-            #include "UEqn.H"
-
-            //- Pressure corrector loop
-            while (pimple.correct())
+            //-After the first time step run the pressure & U loop
+            if (b)
             {
-                #include "pEqn.H"
+                Info<< nl << "Running phase field calculation:" << nl << endl;
+                b = false;
+            }
+
+            #include "alphaEqnSubCycle.H"
+
+            //- Pressure-velocity PIMPLE corrector loop
+            while (pimple.loop())
+            {
+                #include "UEqn.H"
+
+                //- Pressure corrector loop
+                while (pimple.correct())
+                {
+                    #include "pEqn.H"
+                }
             }
         }
-        
-        #include "continuityErrs.H"
+
+        //#include "interfaceFlux.H"
 
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s" << nl
-            << endl;
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

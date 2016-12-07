@@ -1,4 +1,6 @@
+
     Info<< "Reading field fraction of liquid phase\n" << endl;
+
     IOdictionary transportProperties
     (
         IOobject
@@ -10,7 +12,7 @@
             IOobject::NO_WRITE
         )
     );
-    
+
     surfaceScalarField difFlux
     (
         IOobject
@@ -23,7 +25,7 @@
         ),
         mesh
     );
-    
+
     Info<< "Reading field p_rgh\n" << endl;
     volScalarField p_rgh
     (
@@ -52,19 +54,155 @@
         mesh
     );
 
-    #include "createPhi.H"
+    Info<< "Reading/calculating face flux field phi\n" << endl;
+
+    surfaceScalarField phi
+    (
+        IOobject
+        (
+            "phi",
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        linearInterpolate(U)& mesh.Sf()
+    );
+
     phi = fvc::interpolate(U)& mesh.Sf();
-    
+
     //-For input, to avoid precalculation, the alpha1 field simply must
     // be = 1 for liquid, and 0 for gas, and vary in between to set the interface
-    
+
     Info<< "Reading transportProperties\n" << endl;
-    twoPhaseMixture twoPhaseProperties(U, phi, transportProperties);
-    
+    twoPhaseMixture twoPhaseProperties(U,phi,transportProperties);
+
     volScalarField& alpha1(twoPhaseProperties.alpha1());
-    
+
     volScalarField rho = twoPhaseProperties.rhoMix(alpha1);
     rho.oldTime();
+
+    scalar T_Multiplier = scalar(0);
+    scalar K_Multiplier = scalar(0);
+
+    const scalar deltaTZero = 1E-8;
+
+    volScalarField tmpA
+    (
+        IOobject
+        (
+            "tmpA",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        (alpha1 + alpha1.oldTime())/scalar(2)
+    );
+
+    volScalarField tempAlpha1
+    (
+        IOobject
+        (
+            "tempAlpha1",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        alpha1.oldTime() - fvc::div(difFlux)*runTime.deltaT()*T_Multiplier
+    );
+    
+    volScalarField lowFilter
+    (
+        IOobject
+        (
+            "lowFilter",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        neg(tempAlpha1)
+    );
+
+    volScalarField highFilter
+    (
+        IOobject
+        (
+            "highFilter",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        neg(scalar(1) - tempAlpha1)
+    );
+
+    volScalarField nDelta
+    (
+        IOobject
+        (
+            "nDelta",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+      - fvc::div(fvc::interpolate(lowFilter)*difFlux)*runTime.deltaT()*T_Multiplier
+    );
+
+    surfaceScalarField gAlpha1
+    (
+        IOobject
+        (
+            "gAlpha1",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        fvc::snGrad(alpha1)*mesh.magSf()
+    );
+
+    volScalarField tempK_Alpha1
+    (
+        IOobject
+        (
+            "tempK_Alpha1",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+      - fvc::div(difFlux) - fvc::div(phi,alpha1)
+    );
+
+    surfaceScalarField glapAlpha1
+    (
+        IOobject
+        (
+            "glapAlpha1",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        fvc::snGrad(fvc::laplacian(alpha1))*mesh.magSf()
+    );
+
+    surfaceScalarField alpha1Energy
+    (
+        IOobject
+        (
+            "alpha1Energy",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        fvc::interpolate(alpha1)*(scalar(1) - fvc::interpolate(alpha1))
+    );
 
     volVectorField gradAlpha1
     (
@@ -78,7 +216,46 @@
         ),
         fvc::grad(alpha1)
     );
-    
+
+    volScalarField ICurv
+    (
+        IOobject
+        (
+            "ICurv",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        fvc::div(fvc::interpolate(gradAlpha1/(mag(gradAlpha1) + scalar(1E-8)/pow(average(tmpA.mesh().V()),scalar(1)/scalar(3))))& mesh.Sf())
+    );
+
+    volVectorField surfaceForceTerm
+    (
+        IOobject
+        (
+            "div(lamdastar*beta*grad(alpha1)*grad(alpha1))",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        twoPhaseProperties.mixingEDensity()*ICurv*mag(gradAlpha1)*gradAlpha1
+    );
+
+    volScalarField K_alpha1
+    (
+        IOobject 
+        (
+            "K_alpha1",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        alpha1*scalar(0)/runTime.deltaT()
+    );
+
     volScalarField gradAlpha1Field
     (
         IOobject
@@ -93,7 +270,7 @@
       - twoPhaseProperties.filterAlpha()),(scalar(1)
       + twoPhaseProperties.temperature())*scalar(0.5))
     );
-    
+
     //-Mass flux
     // Initialisation does not matter because rhoPhi is reset after the
     // alpha1 solution before it is used in the U equation.
@@ -110,6 +287,19 @@
         fvc::interpolate(rho)*phi
     );
 
+    surfaceScalarField rhoPhiSum
+    (
+        IOobject
+        (
+            "rhoPhiSum",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        scalar(0)*rhoPhi
+    );
+
     //-Construct interface from alpha1 distribution
     interfaceProperties interface(alpha1,U,twoPhaseProperties);
 
@@ -118,6 +308,19 @@
     Info << "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g& mesh.C());
     surfaceScalarField ghf("ghf",g& mesh.Cf());
+
+    surfaceScalarField KSaG
+    (
+        IOobject
+        (
+            "KSaG",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        fvc::snGrad(rho)*ghf*mesh.magSf() + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
+    );
 
     volScalarField p
     (

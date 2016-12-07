@@ -3,7 +3,7 @@
     volScalarField rAU("rAU",1.0/UEqn.A());
     surfaceScalarField rAUf("rAUf",fvc::interpolate(rAU));
 
-    surfaceScalarField rhof = twoPhaseProperties.rhoMixF(scalar(0.5)*(alpha1 + alpha1.oldTime()));
+    surfaceScalarField rhof = twoPhaseProperties.rhoMixF(scalar(0.5)*(alpha1.oldTime() + alpha1));
 
     //-Solve for the velocity based on the velocity terms described in UEqn.
     volVectorField HbyA("HbyA",U);
@@ -13,28 +13,27 @@
     (
         "phiHbyA",
         (fvc::interpolate(HbyA)& mesh.Sf())
-      + fvc::ddtPhiCorr(rAU, rho, U, phi)
+      + fvc::ddtPhiCorr(rAU,rho,U,phi)
     );
 
-    adjustPhi(phiHbyA, U, p_rgh);
+    adjustPhi(phiHbyA,U,p_rgh);
     phi = phiHbyA;
 
     surfaceScalarField phig
     (
-        K_SandG*rAUf
+        (KSaG)*rAUf
     );
 
-    phiHbyA += phig;
+    phiHbyA -= phig;
 
     while (pimple.correctNonOrthogonal())
     {
         fvScalarMatrix p_rghEqn
         (
-            fvm::laplacian(rAUf, p_rgh) == fvc::div(phi) 
+            fvm::laplacian(rAUf,p_rgh) == fvc::div(phi) 
         );
-        
-        p_rghEqn.setReference(pRefCell, getRefCellValue(p_rgh, pRefCell));
 
+        p_rghEqn.setReference(pRefCell,getRefCellValue(p_rgh,pRefCell));
         p_rghEqn.solve(mesh.solver(p_rgh.select(pimple.finalInnerIter())));
 
         if (pimple.finalNonOrthogonalIter())
@@ -47,6 +46,8 @@
         }
     }
 
+    fvc::makeRelative(phi,U);
+
     #include "continuityErrs.H"
 
     p == p_rgh + rho*gh;
@@ -57,7 +58,7 @@
         (
             "p",
             p.dimensions(),
-            pRefValue - getRefCellValue(p, pRefCell)
+            pRefValue - getRefCellValue(p,pRefCell)
         );
         p_rgh = p - rho*gh;
     }
