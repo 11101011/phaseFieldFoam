@@ -69,7 +69,7 @@
         linearInterpolate(U)& mesh.Sf()
     );
 
-    phi = fvc::interpolate(U)& mesh.Sf();
+//     phi = fvc::interpolate(U)& mesh.Sf();
 
     //-For input, to avoid precalculation, the alpha1 field simply must
     // be = 1 for liquid, and 0 for gas, and vary in between to set the interface

@@ -1,7 +1,7 @@
 {
     //-Calculate descretization coefficients based on the definition of Ueqn
     volScalarField rAU("rAU",1.0/UEqn.A());
-    surfaceScalarField rAUf("rAUf",fvc::interpolate(rAU));
+    surfaceScalarField rAUf = fvc::interpolate(rAU);
 
     surfaceScalarField rhof = twoPhaseProperties.rhoMixF(scalar(0.5)*(alpha1.oldTime() + alpha1));
 
@@ -9,10 +9,15 @@
     volVectorField HbyA("HbyA",U);
     HbyA = rAU*UEqn.H();
 
+    /*
+    // ddtPhiCorr //
+    This term accounts for the divergence of the face velocity field by taking out the difference between the interpolated velocity and the flux
+    */
+
     surfaceScalarField phiHbyA
     (
         "phiHbyA",
-        (fvc::interpolate(HbyA)& mesh.Sf())
+        (fvc::interpolate(HbyA) & mesh.Sf())
       + fvc::ddtPhiCorr(rAU,rho,U,phi)
     );
 
@@ -24,7 +29,7 @@
         (KSaG)*rAUf
     );
 
-    phiHbyA -= phig;
+    phiHbyA += phig;
 
     while (pimple.correctNonOrthogonal())
     {

@@ -1,5 +1,5 @@
     //-Create a temporal alpha1
-    tmpA = (alpha1 + alpha1.oldTime())/scalar(2);
+    tmpA = (alpha1.oldTime() + alpha1)/scalar(2);
 
     //-Pre-calculate grad(alpha1) to reduce comp. time
     gradAlpha1 = fvc::grad(min(max(tmpA,scalar(0)),scalar(1)));
@@ -28,9 +28,9 @@
 
     UEqn.relax();
 
-    KSaG = 
+    KSaG =
     (
-        fvc::snGrad(rho)*ghf*mesh.magSf()
+      - fvc::snGrad(rho)*ghf*mesh.magSf()
       + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())
       * neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
     );
