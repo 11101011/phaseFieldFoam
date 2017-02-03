@@ -117,7 +117,7 @@ dimensionedScalar twoPhaseMixture::mixingE(const scalar curAlpha1_)
 //-Slope function for the contact angle gradient calculation
 scalarField twoPhaseMixture::boundarySlope(const scalarField& curAlpha1_)
 {
-    scalarField slope_ = 
+    scalarField slope_ =
     (
         scalar(-1)*cos
         (
@@ -125,7 +125,7 @@ scalarField twoPhaseMixture::boundarySlope(const scalarField& curAlpha1_)
         )*sqrt
         (
             scalar(2)*mixingEscalar(curAlpha1_)
-        )/ capillaryWidth_.value()
+        )/capillaryWidth_.value()
     );
 
     return slope_;
@@ -206,7 +206,7 @@ twoPhaseMixture::twoPhaseMixture
         ),
         U_.mesh()
     ),
-    
+
     nu_
     (
         IOobject
@@ -254,7 +254,7 @@ tmp<volScalarField> twoPhaseMixture::mu(const volScalarField& alpha1New_) const
     (
         min(max(alpha1New_,scalar(0)),scalar(1))
     );
-    
+
     return tmp<volScalarField>
     (
         new volScalarField
@@ -313,7 +313,7 @@ tmp<surfaceScalarField> twoPhaseMixture::diffusivityF(const surfaceScalarField& 
     {
         safetyFactor = scalar(0.001);
     }
-    
+
     return tmp<surfaceScalarField> 
     (
         new surfaceScalarField
@@ -400,7 +400,7 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
         //-Check to see if the current boundary is a fixedGradient type
         if (isA<fixedGradientFvPatchScalarField>(curAlpha1_.boundaryField()[patchi]))
         {
-            //-Create a reference to the patch field.  note that this variable can be treated
+            //-Create a reference to the patch field. Note that this variable can be treated
             // as a scalar field containing the values of curAlpha1_ on the boundary face
             fixedGradientFvPatchScalarField& curPatch = refCast<fixedGradientFvPatchScalarField>(curAlpha1_.boundaryField()[patchi]);
 
@@ -412,10 +412,10 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
 
             //-Ensure the value of alpha1 is updated on the boundary face.  Equivalent to correctBoundaryConditions function
             curPatch.evaluate();
-            
+
             scalarField zeroAlpha1 = curPatch;
 
-            //-Determine the new gradient value.  boundarySlope is a function that accepts a scalarField, and returns a scalarField
+            //-Determine the new gradient value. The function "boundarySlope" accepts a scalarField, and returns a scalarField
             gradAlpha1 = boundarySlope(curPatch);
 
             //-Recalculate the value of curAlpha1 on the boundary faces
@@ -435,7 +435,7 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_)
               + lowerFilter*(scalar(-1)*zeroAlpha1)/(curPatch - zeroAlpha1 + safetyFactor)
               + (scalar(1) - upperFilter - lowerFilter)
             );
-            
+
             curPatch.evaluate();  
 
             Info<< "Boundary Min: " 

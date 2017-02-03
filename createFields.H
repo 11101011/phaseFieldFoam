@@ -66,10 +66,9 @@
             IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
         ),
-        linearInterpolate(U)& mesh.Sf()
+        fvc::interpolate(U)& mesh.Sf()
     );
 
-//     phi = fvc::interpolate(U)& mesh.Sf();
 
     //-For input, to avoid precalculation, the alpha1 field simply must
     // be = 1 for liquid, and 0 for gas, and vary in between to set the interface
@@ -87,18 +86,6 @@
 
     const scalar deltaTZero = 1E-8;
 
-    volScalarField tmpA
-    (
-        IOobject
-        (
-            "tmpA",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        (alpha1 + alpha1.oldTime())/scalar(2)
-    );
 
     volScalarField tempAlpha1
     (
@@ -112,7 +99,7 @@
         ),
         alpha1.oldTime() - fvc::div(difFlux)*runTime.deltaT()*T_Multiplier
     );
-    
+
     volScalarField lowFilter
     (
         IOobject
@@ -217,32 +204,6 @@
         fvc::grad(alpha1)
     );
 
-    volScalarField ICurv
-    (
-        IOobject
-        (
-            "ICurv",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        fvc::div(fvc::interpolate(gradAlpha1/(mag(gradAlpha1) + scalar(1E-8)/pow(average(tmpA.mesh().V()),scalar(1)/scalar(3))))& mesh.Sf())
-    );
-
-    volVectorField surfaceForceTerm
-    (
-        IOobject
-        (
-            "div(lamdastar*beta*grad(alpha1)*grad(alpha1))",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        twoPhaseProperties.mixingEDensity()*ICurv*mag(gradAlpha1)*gradAlpha1
-    );
-
     volScalarField K_alpha1
     (
         IOobject 
@@ -303,24 +264,17 @@
     //-Construct interface from alpha1 distribution
     interfaceProperties interface(alpha1,U,twoPhaseProperties);
 
+    //-Construct incompressible turbulence model
+    autoPtr<incompressible::turbulenceModel> turbulence
+    (
+        incompressible::turbulenceModel::New(U, phi, twoPhaseProperties)
+    );
+
     #include "readGravitationalAcceleration.H"
 
     Info << "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g& mesh.C());
     surfaceScalarField ghf("ghf",g& mesh.Cf());
-
-    surfaceScalarField KSaG
-    (
-        IOobject
-        (
-            "KSaG",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        fvc::snGrad(rho)*ghf*mesh.magSf() + (fvc::interpolate(surfaceForceTerm)& mesh.Sf())*neg(fvc::interpolate(tmpA*(tmpA - scalar(1))))
-    );
 
     volScalarField p
     (

@@ -43,6 +43,7 @@ Description
 #include "dynamicFvMesh.H"
 #include "interfaceProperties.H"
 #include "twoPhaseMixture.H"
+#include "turbulenceModel.H"
 #include "pimpleControl.H"
 #include "fvIOoptionList.H"
 

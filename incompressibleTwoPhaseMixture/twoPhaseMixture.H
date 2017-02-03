@@ -88,7 +88,7 @@ protected:
     //-Private Member Functions
 
         scalar calc2F1(double a1_, double a2_, double b_, double z_);
-        
+
         //-Calculate and return the laminar viscosity
         void calcNu();
 
@@ -97,7 +97,7 @@ protected:
 
         //-Calculate and record the mixing Energy Density * Beta
         void calcMixingEDensity();
-        
+
         //-Calculate and return the TVSED value at a given curAlpha1
         dimensionedScalar mixingE(const scalar curAlpha1_);
 
@@ -139,12 +139,12 @@ public:
         {
             return phase2Name_;
         }
-        
+
         scalar temperature()
         {
             return Tr_.value();
         }
-        
+
         //-Return the phase-fraction of phase 1
         const volScalarField& alpha1() const
         {
@@ -257,7 +257,7 @@ public:
 
         //-Correct the alpha1 for a given contact angle
         void updateContactAngle(volScalarField& curAlpha1_);
-        
+
         dimensionedScalar epsTOne();
         dimensionedScalar mixingEDensityTOne();
 };
