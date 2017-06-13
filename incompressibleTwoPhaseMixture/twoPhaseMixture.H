@@ -54,7 +54,7 @@ class twoPhaseMixture
     public transportModel
 {
 protected:
-    
+
     //-Private data
 
         word phase1Name_;
@@ -252,14 +252,14 @@ public:
             calcNu();
         }
 
-        //-Read base transportProperties dictionary
-        virtual bool read();
-
         //-Correct the alpha1 for a given contact angle
-        void updateContactAngle(volScalarField& curAlpha1_);
+        void updateContactAngle(volScalarField& curAlpha1_, double *boundaryMin, bool *boundaryMin_t);
 
         dimensionedScalar epsTOne();
         dimensionedScalar mixingEDensityTOne();
+
+        //-Read base transportProperties dictionary
+        virtual bool read();
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

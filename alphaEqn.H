@@ -1,3 +1,4 @@
+{
     {
         //-Solve the alpha1 equation at the current time step and
         // calculate the laplacian of the alpha1 field and the diffusive flux
@@ -38,8 +39,9 @@
     //-Solve for the new value of alpha1
     alpha1 = alpha1.oldTime() + runTime.deltaT()*T_Multiplier*tempK_Alpha1;
 
-    twoPhaseProperties.updateContactAngle(alpha1);
+    twoPhaseProperties.updateContactAngle(alpha1,boundaryMin,boundaryMin_t);
 
     rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1.oldTime() + alpha1));
 
     rhoPhi = rhoPhiSum;
+}

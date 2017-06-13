@@ -49,7 +49,7 @@
 
     alpha1 = alpha1.oldTime() + runTime.deltaT()*K_alpha1;
 
-    twoPhaseProperties.updateContactAngle(alpha1);
+    twoPhaseProperties.updateContactAngle(alpha1,boundaryMin,boundaryMin_t);
 
     rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1.oldTime() + alpha1));
 
