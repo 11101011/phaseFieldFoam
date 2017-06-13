@@ -387,7 +387,7 @@ dimensionedScalar twoPhaseMixture::alpha1Multiplier() const
     return sqr(scalar(0.5)*pi/(scalar(1) - scalar(2)*filterAlpha_));
 }
 
-void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_, double *boundaryMin, bool *boundaryMin_t)
+void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_, scalar *boundaryMin, bool *boundaryMin_t)
 {
     //-Create a pointer to the mesh
     const fvMesh& mesh = curAlpha1_.mesh();

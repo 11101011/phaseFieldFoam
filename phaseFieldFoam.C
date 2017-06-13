@@ -67,11 +67,11 @@ int main(int argc, char *argv[])
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     bool t = true;
     bool b = true;
-    
+
     //-Obtain a list of all boundaries on the mesh
     const fvPatchList& patches = mesh.boundary();
     int N = static_cast<int> (patches.size());
-    
+
     scalar boundaryMin[N];
     bool boundaryMin_t[N];
 
