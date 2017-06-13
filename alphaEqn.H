@@ -1,4 +1,6 @@
 {
+    word alphaScheme("div(phi,alpha1)");
+
     {
         //-Solve the alpha1 equation at the current time step and
         // calculate the laplacian of the alpha1 field and the diffusive flux
@@ -29,8 +31,9 @@
         //-Returns convective face flux field of fvScalarMatrix
       + fvc::flux
         (
-            phi,alpha1,
-            "div(phi,alpha1)"
+            phi,
+            alpha1,
+            alphaScheme
         )
     )*(twoPhaseProperties.rho1() - twoPhaseProperties.rho2()) + phi*twoPhaseProperties.rho2();
 

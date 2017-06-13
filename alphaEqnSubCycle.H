@@ -1,4 +1,4 @@
-
+{
     //-Update the refinement field indicator
     gradAlpha1Field = 
     twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))/Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
@@ -65,3 +65,4 @@
     rho = twoPhaseProperties.rhoMix(scalar(0.5)*(alpha1.oldTime() + alpha1));
 
     rhoPhi = rhoPhiSum;
+}

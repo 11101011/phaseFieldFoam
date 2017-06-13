@@ -446,7 +446,6 @@ void twoPhaseMixture::updateContactAngle(volScalarField& curAlpha1_, scalar *bou
             curPatch.evaluate();
 
             boundaryMin[i] = min(curPatch*(scalar(1) - curPatch));
-
         }
 
         i++;
