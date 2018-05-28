@@ -83,6 +83,7 @@ void twoPhaseMixture::calcCapillaryWidth()
     //-This formulation applies to the TVSED energy function
     //-Variable units: [capillaryWidth] = (0 1 0 0 0 0 0)
 
+    // EQ 2.10
     capillaryWidth_ = thickness_/Foam::pow(scalar(2),Tr_.value() + scalar(0.5))/(scalar(1) 
   - scalar(2)*filterAlpha_)/calc2F1(scalar(0.5),(scalar(1) + Tr_.value())/scalar(2),scalar(1.5),sqr(scalar(1)
   - scalar(2)*filterAlpha_.value()));
@@ -95,6 +96,8 @@ void twoPhaseMixture::calcCapillaryWidth()
 //-Calculates the mixing energy density, which controls the surface tension
 void twoPhaseMixture::calcMixingEDensity()
 {
+    //EQ 2.11 
+    
     //-The following entry is for the standard surface tension expression
     mixingEDensity_ = 
     (

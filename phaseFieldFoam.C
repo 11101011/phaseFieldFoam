@@ -93,6 +93,9 @@ int main(int argc, char *argv[])
         {
             #include "CourantNo.H"
             #include "alphaCourantNo.H"
+            
+            fvc::makeAbsolute(phi,U);
+            
             #include "setDeltaT.H"
         }
 
@@ -106,7 +109,7 @@ int main(int argc, char *argv[])
         scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
 
         {
-            // Calculate the relative velocity used to map the relative flux phi
+            //-Calculate the relative velocity used to map the relative flux phi
             volVectorField Urel("Urel", U);
 
             if (mesh.moving())
@@ -114,7 +117,26 @@ int main(int argc, char *argv[])
                 Urel -= fvc::reconstruct(fvc::meshPhi(U));
             }
 
-            // Do any mesh changes
+            //-Update the refinement field indicator
+            gradAlpha1Field = 
+            twoPhaseProperties.capillaryWidth()*mag(fvc::grad(alpha1))/Foam::pow(scalar(2),scalar(0.5))/Foam::pow(twoPhaseProperties.filterAlpha()*(scalar(1)
+          - twoPhaseProperties.filterAlpha()),(scalar(1)
+          + twoPhaseProperties.temperature())*scalar(0.5));
+                
+            {
+                volScalarField checkAlpha1 = 
+                (
+                    scalar(10)*(pos(alpha1 
+                  - twoPhaseProperties.filterAlpha()/scalar(2)) 
+                  - neg(scalar(1) 
+                  - twoPhaseProperties.filterAlpha()/scalar(2) 
+                  - alpha1))
+                );
+
+                gradAlpha1Field += checkAlpha1;
+            }
+
+            //-Do any mesh changes
             mesh.update();
         }
 
@@ -158,7 +180,7 @@ int main(int argc, char *argv[])
 
             #include "alphaEqnSubCycle.H"
 
-            //- Pressure-velocity PIMPLE corrector loop
+            //-Pressure-velocity PIMPLE corrector loop
             while (pimple.loop())
             {
                 #include "UEqn.H"
@@ -170,8 +192,6 @@ int main(int argc, char *argv[])
                 }
             }
         }
-
-        //#include "interfaceFlux.H"
 
         runTime.write();
 
